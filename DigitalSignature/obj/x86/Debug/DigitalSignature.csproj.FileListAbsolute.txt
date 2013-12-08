@@ -1,0 +1,8 @@
+D:\Project c#\DigitalSignature\DigitalSignature\bin\Debug\DigitalSignature.exe
+D:\Project c#\DigitalSignature\DigitalSignature\bin\Debug\DigitalSignature.pdb
+D:\Project c#\DigitalSignature\DigitalSignature\obj\x86\Debug\DigitalSignature.FormMain.resources
+D:\Project c#\DigitalSignature\DigitalSignature\obj\x86\Debug\DigitalSignature.Properties.Resources.resources
+D:\Project c#\DigitalSignature\DigitalSignature\obj\x86\Debug\DigitalSignature.csproj.GenerateResource.Cache
+D:\Project c#\DigitalSignature\DigitalSignature\obj\x86\Debug\DigitalSignature.exe
+D:\Project c#\DigitalSignature\DigitalSignature\obj\x86\Debug\DigitalSignature.pdb
+D:\Project c#\DigitalSignature\DigitalSignature\obj\x86\Debug\DigitalSignature.csprojResolveAssemblyReference.cache
