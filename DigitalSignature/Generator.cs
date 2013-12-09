@@ -56,7 +56,7 @@ namespace DigitalSignature
         {
             int result = 0;
 
-            for (int i = 2000; i < primeInteger; ++i)
+            for (int i = 2; i < primeInteger; ++i)
             {
                 if (EuclideanAlgorithm(primeInteger, i) == 1)
                 {

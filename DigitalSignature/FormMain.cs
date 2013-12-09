@@ -13,14 +13,17 @@ namespace DigitalSignature
 {
     public partial class FormMain : Form
     {
+        private readonly int maxPrimeNumber = 256;
         public FormMain()
         {
             InitializeComponent();
         }
 
-        private void WriteTwoByte(FileStream fs, int twoByte)
+        private void WriteTwoByte(FileStream fs, int twoByte,int r)
         {
             string bytes = Convert.ToString(twoByte, 2);
+            if(bytes.Length > 16)
+                twoByte = 0;
             while (bytes.Length < 16)
                 bytes = "0" + bytes;
             string firstByte = bytes.Substring(0, 8);
@@ -52,43 +55,49 @@ namespace DigitalSignature
             for (int i = begin; i < arr.Length; i += offset)
                 result += arr[i];
 
-            return result % 50;
+            return result % maxPrimeNumber;
         }
 
         private byte[] GetHashSHA1(string fileName)
         {
             SHA1 sha1 = new SHA1();
             FileStream fs = new FileStream(fileName, FileMode.Open);
-            
-            //check length < 2 ^ 64!!!
-            long numberBlock = fs.Length / 64;
-            if (fs.Length % 64 != 0)
-                ++numberBlock;
-            for (int block = 0; block < numberBlock; ++block)
+            string hashResult = "";
+
+            if (!(fs.Length > (Math.Pow(2,64) / 8)))
             {
-                long length = (block == numberBlock - 1) ? (fs.Length - (numberBlock - 1) * 64) : 64;
-                byte[] a = new byte[length];
-                fs.Read(a, block*64, a.Length);
-                string str1 = "";
-                for (int i = 0; i < a.Length; ++i)
-                    str1 += Convert.ToString(a[i], 2);
-                if (str1.Length < 512)
-                    str1 += "1";
-                for (int i = str1.Length; i < 448; ++i)
-                    str1 += "0";
-                string str = Convert.ToString(fs.Length, 2);
-                while (str.Length < 64)
-                    str = "0" + str;
-                str1 += str;
-                UInt32[] arr = new UInt32[16];
-                for (int i = 0; i < 16; ++i)
+                long numberBlock = fs.Length / 64;
+                if (fs.Length % 64 != 0)
+                    ++numberBlock;
+                for (int block = 0; block < numberBlock; ++block)
                 {
-                    string temp = str1.Substring(i * 16, 16);
-                    arr[i] = Convert.ToUInt32(temp, 2);
+                    long length = (block == numberBlock - 1) ? (fs.Length - (numberBlock - 1) * 64) : 64;
+                    byte[] a = new byte[length];
+                    for (int i = 0; i < a.Length; ++i)
+                        a[i] = (byte)fs.ReadByte();
+                    string str1 = "";
+                    for (int i = 0; i < a.Length; ++i)
+                        str1 += Convert.ToString(a[i], 2);
+                    if (str1.Length < 512)
+                        str1 += "1";
+                    for (int i = str1.Length; i < 448; ++i)
+                        str1 += "0";
+                    string str = Convert.ToString(fs.Length, 2);
+                    while (str.Length < 64)
+                        str = "0" + str;
+                    str1 += str;
+                    UInt32[] arr = new UInt32[16];
+                    for (int i = 0; i < 16; ++i)
+                    {
+                        string temp = str1.Substring(i * 16, 16);
+                        arr[i] = Convert.ToUInt32(temp, 2);
+                    }
+                    sha1.ProcessBlock(arr);
                 }
-                sha1.ProcessBlock(arr);
+                hashResult = sha1.GetResultHash();
             }
-            string hashResult = sha1.GetResultHash();
+            else
+                MessageBox.Show("Size of file shoul be less than 2^64");
             fs.Close();
             return Encoding.Default.GetBytes(hashResult);
         }
@@ -98,11 +107,11 @@ namespace DigitalSignature
             FileStream sw = new FileStream(tb_saveSignature.Text, FileMode.Create);
             byte[] hashArray = GetHashSHA1(tb_failePath.Text);
             byte[] hashPassword = GetBytePassword(tb_key.Text);
-            RSA rsa = new RSA(GetSumElements(hashPassword, 0, 2), GetSumElements(hashPassword, 1, 2),false);
+            RSA rsa = new RSA(GetSumElements(hashPassword, 0, 2), GetSumElements(hashPassword, 1, 2),false,maxPrimeNumber);
             for (int i = 0; i < hashArray.Length; ++i)
             {
                 int cipherByte = rsa.Encrypt(hashArray[i]);
-                WriteTwoByte(sw, cipherByte);
+                WriteTwoByte(sw, cipherByte,rsa.p * rsa.q);
             }
             sw.Close();
         }
@@ -137,7 +146,7 @@ namespace DigitalSignature
             byte[] hashFromMessage = GetHashSHA1(tb_failePath.Text);
             
             byte[] hashPassword = GetBytePassword(tb_key.Text);
-            RSA rsa = new RSA(GetSumElements(hashPassword, 0, 2), GetSumElements(hashPassword, 1, 2), false);
+            RSA rsa = new RSA(GetSumElements(hashPassword, 0, 2), GetSumElements(hashPassword, 1, 2), false,maxPrimeNumber);
             FileStream sr = new FileStream(tb_openSignature.Text, FileMode.Open);
             byte[] hashFromDecrypt = new byte[sr.Length / 2];
             for (int i = 0; i < sr.Length / 2; ++i)

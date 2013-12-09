@@ -15,16 +15,18 @@ namespace DigitalSignature
         public int privateKey;
         private Generator generator;
         private ResidueNumberSstem modArithmetic;
+        public readonly int maxPrimeNumber;
 
-        public RSA(int pPos,int qPos,bool isBreaking)
+        public RSA(int pPos,int qPos,bool isBreaking,int maxPrimeCount)
         {
             generator = new Generator();
-            generator.GeneratePrimeIntegers(1000);
+            this.maxPrimeNumber = maxPrimeCount;
+            generator.GeneratePrimeIntegers(maxPrimeNumber);
             modArithmetic = new ResidueNumberSstem();
             if (!isBreaking)
             {                
-                this.p = generator.primeNumbers[pPos];
-                this.q = generator.primeNumbers[qPos];
+                this.p = generator.primeNumbers[pPos % generator.primeNumbers.Count];
+                this.q = generator.primeNumbers[qPos % generator.primeNumbers.Count];
                 CalculateData();
             }
             else
@@ -42,7 +44,6 @@ namespace DigitalSignature
         public int Encrypt(int message)
         {
             int result = 0;
-            //CalculateData();
             result = modArithmetic.FastExp(message, publicKey, r);
             return result;
         }
@@ -50,7 +51,6 @@ namespace DigitalSignature
         public int Decrypt(int cipher)
         {
             int result = 0;
-            //CalculateData();
             result = modArithmetic.FastExp(cipher, privateKey, r);
             return result;
         }
